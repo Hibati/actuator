@@ -13,7 +13,12 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="`pkg-config --cflags --libs dbus-1`  `pkg-config --cflags glib-2.0`" />
+					<Add directory="/home/pi/Desktop/actuator/" />
 				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs glib-2.0` `pkg-config --cflags --libs dbus-1` -lreadline -lcurl" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/actuator" prefix_auto="1" extension_auto="1" />
@@ -31,9 +36,63 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main.c">
+		<Unit filename="att.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="att.h" />
+		<Unit filename="bluetooth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bluetooth.h" />
+		<Unit filename="btio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="btio.h" />
+		<Unit filename="client/display.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="frozen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gatt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gatt.depend" />
+		<Unit filename="gatt.h" />
+		<Unit filename="gattrib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gattrib.h" />
+		<Unit filename="gatttool.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gatttool.h" />
+		<Unit filename="gattv3.depend" />
+		<Unit filename="hci.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="hci.h" />
+		<Unit filename="hci_lib.h" />
+		<Unit filename="interactive.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="l2cap.h" />
+		<Unit filename="log.h" />
+		<Unit filename="rfcomm.h" />
+		<Unit filename="sco.h" />
+		<Unit filename="sdp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="sdp.h" />
+		<Unit filename="sdp_lib.h" />
+		<Unit filename="utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="utils.h" />
+		<Unit filename="uuid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="uuid.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
