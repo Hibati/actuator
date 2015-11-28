@@ -66,6 +66,7 @@ static int start;
 static int end;
 //
 char data[20]={'n'};
+static pre_state = 30;
 //int count=0;
 //
 static void cmd_help(int argcp, char **argvp);
@@ -1009,7 +1010,7 @@ void static myconnect()
 	} else
 	g_io_add_watch(iochannel, G_IO_HUP, channel_watcher, NULL);
 }
-void static writehnd()
+gboolean static writehnd()
 {
 	//rl_printf("test\n");
 
@@ -1019,11 +1020,11 @@ void static writehnd()
 
 	}
 	if(conn_state == STATE_CONNECTING)
-		return 0;
+		return TRUE;
 	http();
 	rl_printf("data = %s\n",data);
 
-	if(atoi(data) ==1)
+	if( pre_state != 31 && atoi(data) ==1)
 	{
 		size_t plen;
 
@@ -1031,8 +1032,10 @@ void static writehnd()
 		plen = gatt_attr_data_from_string("31", &value);
 		gatt_write_cmd(attrib, 14, value, plen, NULL, NULL);
 		g_free(value);
+
+		pre_state = 31;
 	}
-	else
+	else if(pre_state != 30 && atoi(data)==0)
 	{
 		size_t plen;
 
@@ -1040,13 +1043,13 @@ void static writehnd()
 		plen = gatt_attr_data_from_string("30", &value);
 		gatt_write_cmd(attrib, 14, value, plen, NULL, NULL);
 		g_free(value);
-
+		pre_state = 30;
 	}
 	//http();
 
-	//sleep(3);
 
 
+	return TRUE;
 }
 struct string {
   char *ptr;
@@ -1087,7 +1090,7 @@ void http()
 		struct string s;
 		init_string(&s);
 
-	    curl_easy_setopt(curl, CURLOPT_URL, "https://o-thinkspeak-doraliao.c9users.io/channels/6/feeds/last.json");
+	    curl_easy_setopt(curl, CURLOPT_URL, "http://iotser.iots.com.tw:3000/channels/6/feeds/last.json");
 	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 	    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 	#ifdef SKIP_PEER_VERIFICATION
@@ -1125,6 +1128,7 @@ void http()
 	    struct json_token *arr, *tok;
 	    arr = parse_json2(s.ptr, strlen(s.ptr));
 	    tok = find_json_token(arr, "field1");
+	    if(tok!=NULL)
 	    sprintf(data,"%.*s",tok->len,tok->ptr);
 	   //printf("Value of field1 is: %.*s\n", tok->len, tok->ptr);
 	    free(arr);

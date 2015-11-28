@@ -509,11 +509,14 @@ int main(int argc, char *argv[])
 	GOptionGroup *gatt_group, *params_group, *char_rw_group;
 	GError *gerr = NULL;
 	GIOChannel *chan;
-    argv[1]  ="-b";
-    argv[2]  = "F6:97:28:12:42:66";
-    argv[3] = "-I";
-    argv[4] = "ggyy";
-    argc  = 5;
+	if(argc < 2)
+	{
+		argv[1]  ="-b";
+		//argv[2]  = "EF:74:A1:83:AF:B8";
+		argv[2] = "F6:97:28:12:42:66";
+		argv[3] = "-I";
+		argc = 4;
+	}
 	opt_dst_type = g_strdup("random");
 	opt_sec_level = g_strdup("low");
 
