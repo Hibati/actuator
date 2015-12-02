@@ -65,9 +65,37 @@ static int opt_mtu = 0;
 static int start;
 static int end;
 //
-char data[20]={'n'};
+char data[256];
 static pre_state = 30;
 //int count=0;
+struct string {
+  char *ptr;
+  size_t len;
+};
+
+void init_string(struct string *s) {
+  s->len = 0;
+  s->ptr = malloc(s->len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "malloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  s->ptr[0] = '\0';
+}
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
+{
+  size_t new_len = s->len + size*nmemb;
+  s->ptr = realloc(s->ptr, new_len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "realloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  memcpy(s->ptr+s->len, ptr, size*nmemb);
+  s->ptr[new_len] = '\0';
+  s->len = new_len;
+
+  return size*nmemb;
+}
 //
 static void cmd_help(int argcp, char **argvp);
 
@@ -996,9 +1024,6 @@ void static myconnect()
 {
 	GError *gerr = NULL;
 	opt_dst_type = g_strdup("random");
-
-
-
 	rl_printf("Attempting to connect to %s\n", opt_dst);
 	set_state(STATE_CONNECTING);
 	iochannel = gatt_connect(opt_src, opt_dst, opt_dst_type, opt_sec_level,
@@ -1010,17 +1035,183 @@ void static myconnect()
 	} else
 	g_io_add_watch(iochannel, G_IO_HUP, channel_watcher, NULL);
 }
+char * getChannelMac()
+
+{
+	char data [255];
+		  	  CURL *curl;
+			  CURLcode res;
+			  curl = curl_easy_init();
+			  if(curl) {
+				struct string s;
+				init_string(&s);
+
+			    curl_easy_setopt(curl, CURLOPT_URL, "http://iotser.iots.com.tw:3000/channels/94.json?api_key=RHV808FM95NT8RGI");
+			    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+			    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+			#ifdef SKIP_PEER_VERIFICATION
+			    /*
+			     * If you want to connect to a site who isn't using a certificate that is
+			     * signed by one of the certs in the CA bundle you have, you can skip the
+			     * verification of the server's certificate. This makes the connection
+			     * A LOT LESS SECURE.
+			     *
+			     * If you have a CA cert for the server stored someplace else than in the
+			     * default bundle, then the CURLOPT_CAPATH option might come handy for
+			     * you.
+			     */
+			    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			#endif
+
+			#ifdef SKIP_HOSTNAME_VERIFICATION
+			    /*
+			     * If the site you're connecting to uses a different host name that what
+			     * they have mentioned in their server certificate's commonName (or
+			     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+			     * this check, but this will make the connection less secure.
+			     */
+			    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+			#endif
+			    //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, function_pt);
+			    /* Perform the request, res will get the return code */
+			    res = curl_easy_perform(curl);
+			    /* Check for errors */
+			    if(res != CURLE_OK)
+			      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+			              curl_easy_strerror(res));
+
+			   // printf("%s\n", s.ptr);
+			    struct json_token *arr, *tok;
+			    arr = parse_json2(s.ptr, strlen(s.ptr));
+			   // rl_printf("%s\n",s.ptr);
+			    tok = find_json_token(arr, "metadata");
+			    if(tok!=NULL)
+			    sprintf(data,"%.*s",tok->len,tok->ptr);
+			   //printf("Value of field1 is: %.*s\n", tok->len, tok->ptr);
+			    free(arr);
+			    free(s.ptr);
+			    int i=0;
+			    for(i=0;i<strlen(data);i++)
+			    	if(data[i]==92)
+			    		data[i] = 32;
+
+				arr = parse_json2(data, strlen(data));
+				// rl_printf("%s\n",s.ptr);
+				tok = find_json_token(arr, "mac ");
+				if(tok!=NULL)
+				sprintf(data,"%.*s",tok->len,tok->ptr);
+				/* always cleanup */
+				free(arr);
+
+			    curl_easy_cleanup(curl);
+			  }
+
+			  curl_global_cleanup();
+			  data[strlen(data)-1] = 0;
+			  rl_printf("data = %s\n",data);
+			  return data;
+
+}
+int getChannelstatus()
+{
+		char data [255];
+	  	  CURL *curl;
+		  CURLcode res;
+		  curl = curl_easy_init();
+		  if(curl) {
+			struct string s;
+			init_string(&s);
+
+		    curl_easy_setopt(curl, CURLOPT_URL, "http://iotser.iots.com.tw:3000/channels/94.json?api_key=RHV808FM95NT8RGI");
+		    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+		    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+		#ifdef SKIP_PEER_VERIFICATION
+		    /*
+		     * If you want to connect to a site who isn't using a certificate that is
+		     * signed by one of the certs in the CA bundle you have, you can skip the
+		     * verification of the server's certificate. This makes the connection
+		     * A LOT LESS SECURE.
+		     *
+		     * If you have a CA cert for the server stored someplace else than in the
+		     * default bundle, then the CURLOPT_CAPATH option might come handy for
+		     * you.
+		     */
+		    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		#endif
+
+		#ifdef SKIP_HOSTNAME_VERIFICATION
+		    /*
+		     * If the site you're connecting to uses a different host name that what
+		     * they have mentioned in their server certificate's commonName (or
+		     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+		     * this check, but this will make the connection less secure.
+		     */
+		    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+		#endif
+		    //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, function_pt);
+		    /* Perform the request, res will get the return code */
+		    res = curl_easy_perform(curl);
+		    /* Check for errors */
+		    if(res != CURLE_OK)
+		      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+		              curl_easy_strerror(res));
+
+		   // printf("%s\n", s.ptr);
+		    struct json_token *arr, *tok;
+		    arr = parse_json2(s.ptr, strlen(s.ptr));
+		   // rl_printf("%s\n",s.ptr);
+		    tok = find_json_token(arr, "metadata");
+		    if(tok!=NULL)
+		    sprintf(data,"%.*s",tok->len,tok->ptr);
+		   //printf("Value of field1 is: %.*s\n", tok->len, tok->ptr);
+		    free(arr);
+		    free(s.ptr);
+		    int i=0;
+		    for(i=0;i<strlen(data);i++)
+		    	if(data[i]==92)
+		    		data[i] = 32;
+
+			arr = parse_json2(data, strlen(data));
+			// rl_printf("%s\n",s.ptr);
+			tok = find_json_token(arr, "status ");
+			if(tok!=NULL)
+			sprintf(data,"%.*s",tok->len,tok->ptr);
+			/* always cleanup */
+			free(arr);
+
+		    curl_easy_cleanup(curl);
+		  }
+
+		  curl_global_cleanup();
+		  if(data[0]=='r')
+		  return 1;
+		  else
+		  return 0;
+}
 gboolean static writehnd()
 {
 	//rl_printf("test\n");
+	int chs = getChannelstatus();
 
-	if (conn_state == STATE_DISCONNECTED)
+	//rl_printf("status=%s\n",data);
+	if (conn_state == STATE_DISCONNECTED && chs==1)
 	{
+
+
 		myconnect();
 
 	}
+	if(chs==0)
+	{
+		disconnect_io();
+		return TRUE;
+	}
 	if(conn_state == STATE_CONNECTING)
 		return TRUE;
+
+
+	if(attrib ==NULL)
+	return TRUE;
 	http();
 	rl_printf("data = %s\n",data);
 
@@ -1051,34 +1242,7 @@ gboolean static writehnd()
 
 	return TRUE;
 }
-struct string {
-  char *ptr;
-  size_t len;
-};
 
-void init_string(struct string *s) {
-  s->len = 0;
-  s->ptr = malloc(s->len+1);
-  if (s->ptr == NULL) {
-    fprintf(stderr, "malloc() failed\n");
-    exit(EXIT_FAILURE);
-  }
-  s->ptr[0] = '\0';
-}
-size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
-{
-  size_t new_len = s->len + size*nmemb;
-  s->ptr = realloc(s->ptr, new_len+1);
-  if (s->ptr == NULL) {
-    fprintf(stderr, "realloc() failed\n");
-    exit(EXIT_FAILURE);
-  }
-  memcpy(s->ptr+s->len, ptr, size*nmemb);
-  s->ptr[new_len] = '\0';
-  s->len = new_len;
-
-  return size*nmemb;
-}
 void http()
 
 {
@@ -1090,7 +1254,7 @@ void http()
 		struct string s;
 		init_string(&s);
 
-	    curl_easy_setopt(curl, CURLOPT_URL, "http://iotser.iots.com.tw:3000/channels/6/feeds/last.json");
+	    curl_easy_setopt(curl, CURLOPT_URL, "http://iotser.iots.com.tw:3000/channels/51/feeds/last.json");
 	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 	    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 	#ifdef SKIP_PEER_VERIFICATION
@@ -1149,9 +1313,9 @@ int interactive(const char *src, const char *dst,
 	guint signal;
 
 	opt_sec_level = g_strdup("low");
-
 	opt_src = g_strdup(src);
-	opt_dst = g_strdup(dst);
+
+	opt_dst = g_strdup(getChannelMac());
 	opt_dst_type = g_strdup("random");
 	opt_psm = psm;
 

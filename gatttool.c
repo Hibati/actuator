@@ -513,7 +513,8 @@ int main(int argc, char *argv[])
 	{
 		argv[1]  ="-b";
 		//argv[2]  = "EF:74:A1:83:AF:B8";
-		argv[2] = "F6:97:28:12:42:66";
+		//argv[2] = "F6:97:28:12:42:66";
+		argv[2] = "D6:10:54:D6:4A:23";
 		argv[3] = "-I";
 		argc = 4;
 	}
